@@ -194,8 +194,10 @@ namespace SqlSugar
         public IInsertable<T> InsertColumns(Expression<Func<T, object>> columns)
         {
             var ignoreColumns = InsertBuilder.GetExpressionValue(columns, ResolveExpressType.ArraySingle).GetResultArray().Select(it => this.SqlBuilder.GetNoTranslationColumnName(it)).ToList();
-            this.InsertBuilder.DbColumnInfoList = this.InsertBuilder.DbColumnInfoList.Where(it => ignoreColumns.Any(ig => ig.Equals(it.PropertyName, StringComparison.CurrentCultureIgnoreCase))).ToList();
-            return this;
+            this.InsertBuilder.DbColumnInfoList = this.InsertBuilder.DbColumnInfoList.Where(it =>
+                ignoreColumns.Any(ig =>
+                    ig.Equals(it.PropertyName, StringComparison.CurrentCultureIgnoreCase) || ig.Equals(it.DbColumnName, StringComparison.CurrentCultureIgnoreCase)
+                )).ToList(); return this;
         }
 
         public IInsertable<T> InsertColumns(string[] columns)
@@ -375,7 +377,7 @@ namespace SqlSugar
                     PropertyType = column.Value == null ? DBNull.Value.GetType() : UtilMethods.GetUnderType(column.Value.GetType()),
                     TableId = i
                 };
-                if (columnInfo.PropertyType.IsEnum())
+                if (columnInfo.PropertyType.IsEnum() && columnInfo.Value != null)
                 {
                     columnInfo.Value = Convert.ToInt64(columnInfo.Value);
                 }
@@ -399,7 +401,7 @@ namespace SqlSugar
                     PropertyType = UtilMethods.GetUnderType(column.PropertyInfo),
                     TableId = i
                 };
-                if (columnInfo.PropertyType.IsEnum())
+                if (columnInfo.PropertyType.IsEnum() && columnInfo.Value != null)
                 {
                     columnInfo.Value = Convert.ToInt64(columnInfo.Value);
                 }
